@@ -1,0 +1,20 @@
+# Dockerfile.ansible-controller
+FROM ubuntu:latest
+
+# Install SSH client ,Ansible and Vim 
+RUN apt-get update && \
+    apt-get install -y openssh-client ansible python3-apt vim sshpass && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /ansible
+
+# (Optional) Create an SSH key pair for the controller
+# For a demo, we'll use password-based authentication or pre-shared keys.
+# If you want to use SSH keys, you'd generate them here and copy to the host machine,
+# or create them on the host and bind-mount them.
+# For simplicity in this demo, we'll rely on Docker's networking and
+# either password authentication or pre-shared keys for SSH.
+
+CMD ["/bin/bash"]

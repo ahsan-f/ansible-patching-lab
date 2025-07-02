@@ -1,0 +1,20 @@
+# Gitignore for Ansible/Docker project
+
+# Docker files/directories
+# Ignore Docker image layers (usually not committed)
+# Though we are committing Dockerfiles, not the built images
+*.dockerignore
+*.env
+.dockerignore
+
+# Python bytecode
+*.pyc
+*.pyo
+__pycache__/
+
+# Ansible specific (if you had roles/vaults etc. that are sensitive)
+*.retry
+.ansible/
+# Any sensitive files like SSH keys if they were accidentally in this dir
+id_rsa
+id_rsa.pub

@@ -1,0 +1,47 @@
+---
+- name: Apply Linux Patches
+  hosts: targets
+  become: true # Use sudo for root privileges on target nodes
+  vars:
+    apt_update_cache_valid_time: 3600 # Cache valid for 1 hour
+
+  tasks:
+    - name: Update apt cache (Ubuntu/Debian)
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: "{{ apt_update_cache_valid_time }}"
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all installed packages (Ubuntu/Debian)
+      ansible.builtin.apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Autoremove unnecessary packages (Ubuntu/Debian)
+      ansible.builtin.apt:
+        autoremove: yes
+      when: ansible_os_family == "Debian"
+
+    # Add tasks for CentOS/RHEL systems
+    - name: Update yum cache (CentOS/RHEL)
+      ansible.builtin.yum:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Upgrade all installed packages (CentOS/RHEL)
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Reboot if necessary
+      ansible.builtin.reboot:
+        reboot_timeout: 600 # Wait up to 10 minutes for reboot
+      when: ansible_reboot_required|default(false)
+      register: reboot_status
+      ignore_errors: true # Continue even if reboot fails (e.g., in a rapid demo)
+
+    - name: Wait for systems to come back online after reboot
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+      when: reboot_status.changed # Only wait if a reboot was actually triggered
