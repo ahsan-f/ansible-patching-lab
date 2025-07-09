@@ -1,0 +1,12 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Module Lab - {{ ansible_hostname }}</title>
+</head>
+<body>
+    <h1>Module Demo on {{ ansible_hostname }}</h1>
+    <p>This is a page served by Nginx, configured by Ansible `template` module.</p>
+    <p>App Version: {{ app_version | default('1.0.0') }}</p>
+    <p>Using Nginx Port: {{ http_port | default(80) }}</p>
+</body>
+</html>

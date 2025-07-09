@@ -1,0 +1,20 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Ansible Nginx Lab</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f0f0f0; }
+        h1 { color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello from {{ ansible_hostname }}!</h1>
+        <p>This page is served by Nginx, managed by Ansible.</p>
+        <p>Using Nginx Version: <strong>{{ nginx_version }}</strong></p>
+        <p>Running on Port: <strong>{{ http_port }}</strong></p>
+        <p>Deployment Date: <strong>{{ ansible_date_time.iso8601 }}</strong></p>
+    </div>
+</body>
+</html>

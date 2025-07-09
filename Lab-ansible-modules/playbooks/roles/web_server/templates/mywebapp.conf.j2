@@ -1,0 +1,27 @@
+ # playbooks/roles/web_server/templates/mywebapp.conf.j2
+server {
+    listen {{ http_port | default(80) }};
+    listen [::]:{{ http_port | default(80) }};
+
+    server_name {{ server_name | default('localhost') }};
+
+    root /var/www/mywebapp;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Custom endpoint for health checks or specific content
+    location /app_status { # Renamed to /app_status for consistency with module demo
+        return 200 'OK - {{ ansible_hostname }} is online. Nginx {{ nginx_version }}';
+        add_header Content-Type text/plain;
+    }
+
+    # Basic error page example
+    error_page 404 /404.html;
+    location = /404.html {
+        internal;
+        root /var/www/mywebapp;
+    }
+}

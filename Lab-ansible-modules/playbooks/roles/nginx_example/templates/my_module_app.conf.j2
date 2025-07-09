@@ -1,0 +1,16 @@
+ # playbooks/roles/nginx_example/templates/my_module_app.conf.j2
+server {
+    listen {{ http_port | default(80) }};
+    server_name {{ server_name | default('localhost') }};
+    root /var/www/my_module_app;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /app_status {
+        return 200 'OK - Host: {{ ansible_hostname }}, IP: {{ ansible_default_ipv4.address }}';
+        add_header Content-Type text/plain;
+    }
+}

@@ -1,0 +1,13 @@
+ # playbooks/roles/web_server/handlers/main.yml
+---
+- name: Restart nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+  listen: "Restart nginx"
+
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  listen: "Reload nginx"

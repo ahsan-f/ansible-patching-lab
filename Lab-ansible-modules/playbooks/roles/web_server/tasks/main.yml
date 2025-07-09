@@ -1,0 +1,53 @@
+ # playbooks/roles/web_server/tasks/main.yml
+---
+- name: Ensure apt cache is updated (pre-install)
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install Nginx web server
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+  notify: Restart nginx
+
+- name: Create a custom web root directory
+  ansible.builtin.file:
+    path: /var/www/mywebapp # Distinct path from module demo
+    state: directory
+    mode: '0755'
+    owner: www-data
+    group: www-data
+
+- name: Deploy a custom index.html page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/mywebapp/index.html
+    mode: '0644'
+
+- name: Configure Nginx virtual host using template
+  ansible.builtin.template:
+    src: mywebapp.conf.j2
+    dest: /etc/nginx/sites-available/mywebapp.conf
+    mode: '0644'
+  notify: Reload nginx
+
+- name: Enable the new Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/mywebapp.conf
+    dest: /etc/nginx/sites-enabled/mywebapp.conf
+    state: link
+  notify: Reload nginx
+
+- name: Disable the default Nginx site (optional)
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Ensure Nginx service is running and enabled on boot
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true

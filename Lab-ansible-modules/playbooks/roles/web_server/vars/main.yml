@@ -1,0 +1,3 @@
+ # playbooks/roles/web_server/vars/main.yml
+---
+nginx_version: "1.18.0 (Ubuntu-managed)"

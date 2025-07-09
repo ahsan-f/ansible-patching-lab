@@ -1,0 +1,72 @@
+ ---
+- name: Deploy and Configure Nginx Web Server
+  hosts: webservers # This targets 'node1' based on inventory
+  become: true      # Run tasks with root privileges
+  gather_facts: true # Collect facts about the remote host
+
+  roles:
+    - web_server # Applies the 'web_server' role to install and configure Nginx
+
+  tasks:
+    - name: Verify Nginx service is running (ansible.builtin.command)
+      ansible.builtin.command: systemctl is-active nginx
+      register: nginx_active_check # Capture output
+      changed_when: false # Indicate this task doesn't change system state
+
+    - name: Display Nginx service status (ansible.builtin.debug)
+      ansible.builtin.debug:
+        msg: "Nginx service status on {{ ansible_hostname }}: {{ nginx_active_check.stdout }}"
+
+    - name: Check Nginx custom status endpoint (ansible.builtin.uri)
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}/app_status" # Use the custom endpoint defined in Nginx config
+        return_content: true # Fetch the response body
+      register: nginx_status_endpoint
+      # Run only if Nginx is active, or if the status hasn't been checked yet
+      when: nginx_active_check.rc == 0
+
+    - name: Display Nginx custom status response (ansible.builtin.debug)
+      ansible.builtin.debug:
+        msg: "Custom status response: {{ nginx_status_endpoint.content }}"
+      when: nginx_status_endpoint is defined # Only display if the URI call was made
+
+- name: Patch the Nginx Server OS and Nginx package
+  hosts: webservers # Targets 'node1' for patching
+  become: true
+  tasks:
+    - name: Update apt cache (Patching phase) (ansible.builtin.apt)
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600 # Cache valid for 1 hour
+      when: ansible_os_family == "Debian" # Conditional for Debian-based systems
+      tags: patch, update # Tags for selective execution
+
+    - name: Upgrade all installed packages (including Nginx if updates available) (ansible.builtin.apt)
+      ansible.builtin.apt:
+        upgrade: dist # Performs a distribution upgrade
+      when: ansible_os_family == "Debian"
+      tags: patch, upgrade
+
+    - name: Autoremove unnecessary packages (ansible.builtin.apt)
+      ansible.builtin.apt:
+        autoremove: yes
+      when: ansible_os_family == "Debian"
+      tags: patch, clean
+
+    - name: Check if reboot is required after patching (ansible.builtin.stat)
+      ansible.builtin.stat:
+        path: /var/run/reboot-required # Standard file indicating a reboot is needed
+      register: reboot_required_file # Stores file status in this variable
+      tags: patch
+
+    - name: Reboot if necessary after patching (ansible.builtin.reboot)
+      ansible.builtin.reboot:
+        reboot_timeout: 600 # Wait up to 10 minutes for the reboot
+      when: reboot_required_file.stat.exists # Only reboots if the file exists
+      tags: patch, reboot
+
+    - name: Wait for system to come back online after reboot (ansible.builtin.wait_for_connection)
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+      when: reboot_required_file.stat.exists # Only wait if reboot was actually triggered
+      tags: patch

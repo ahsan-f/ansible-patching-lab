@@ -343,3 +343,74 @@ Implementing more complex patching strategies (e.g., staggered rollouts, pre/pos
 Using SSH key-based authentication instead of passwords for better security.
 Integrating with a source control system (Git) to manage your playbooks.
 
+Diagrams
+graph TD
+    subgraph Host Machine (Your PC)
+        A[Docker Daemon]
+        B(User / CLI) -- Executes --> A
+    end
+
+    subgraph Docker Network: ansible-net
+        C[ansible-controller]:::control-node
+        D[node1]:::managed-node
+        E[node2]:::managed-node
+    end
+
+    A -- Manages Containers & Network --> C
+    A -- Manages Containers & Network --> D
+    A -- Manages Containers & Network --> E
+
+    subgraph ansible-controller (Ansible Control Node)
+        C1[Ansible Engine]
+        C2[Playbooks]
+        C3[Inventory]
+        C4[ansible.cfg]
+        C5[Roles]
+    end
+
+    C --- C1
+    C1 --> C2
+    C1 --> C3
+    C1 --> C4
+    C1 --> C5
+
+    C1 -- SSH (Root user, Password-based) --> D
+    C1 -- SSH (Root user, Password-based) --> E
+
+    subgraph node1 (Managed Node: Web Server)
+        D1[Ubuntu OS]
+        D2[Nginx Web Server]
+        D3[Custom Web Content]
+        D4[Python 3]
+    end
+
+    subgraph node2 (Managed Node: General/DB Server)
+        E1[Ubuntu OS]
+        E2[Various Packages/Services]
+        E3[Python 3]
+    end
+
+    D -- Serves HTTP/S --> D2
+    D2 -- Displays --> D3
+
+    classDef control-node fill:#FFFACD,stroke:#DAA520,stroke-width:2px;
+    classDef managed-node fill:#E6F0FF,stroke:#6495ED,stroke-width:2px;
+
+    linkStyle 0 stroke:#555,stroke-width:2px,fill:none,stroke-dasharray: 5 5;
+    linkStyle 1 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 2 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 3 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 4 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 5 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 6 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 7 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 8 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 9 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 10 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 11 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 12 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 13 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 14 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 15 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 16 stroke:#555,stroke-width:2px,fill:none;
+    linkStyle 17 stroke:#555,stroke-width:2px,fill:none;

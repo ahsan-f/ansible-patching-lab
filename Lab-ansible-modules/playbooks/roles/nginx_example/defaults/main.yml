@@ -1,0 +1,4 @@
+ # playbooks/roles/nginx_example/defaults/main.yml
+---
+http_port: 80
+server_name: "moduledemo.ansible.local"

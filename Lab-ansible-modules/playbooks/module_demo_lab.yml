@@ -1,0 +1,76 @@
+ ---
+- name: Phase 1: Setup Nginx and basic checks (apt, file, template, systemd, command, debug, uri)
+  hosts: webservers # Target 'node1'
+  become: true
+  gather_facts: true
+
+  roles:
+    - nginx_example # This role uses apt, file, template, systemd modules
+
+  tasks:
+    - name: Use command module to check free disk space (ansible.builtin.command)
+      ansible.builtin.command: df -h /
+      register: disk_space_output # Store the command output
+      changed_when: false # This command doesn't change system state
+      tags: command_module
+
+    - name: Display disk space using debug module (ansible.builtin.debug)
+      ansible.builtin.debug:
+        msg: "Disk space on {{ ansible_hostname }}: {{ disk_space_output.stdout }}"
+      tags: debug_module
+
+    - name: Check Nginx custom status endpoint using uri module (ansible.builtin.uri)
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}/app_status"
+        return_content: true
+      register: app_status_response
+      # Conditionally run this task: if the response variable isn't defined yet OR the status wasn't 200
+      when: app_status_response is not defined or app_status_response.status != 200
+      tags: uri_module
+
+    - name: Display app status from uri module (ansible.builtin.debug)
+      ansible.builtin.debug:
+        msg: "App Status Check: {{ app_status_response.content }}"
+      when: app_status_response is defined # Only display if the URI call was made
+      tags: debug_module
+
+- name: Phase 2: Demonstrate stat, reboot, wait_for_connection modules
+  hosts: targets # Target both node1 and node2
+  become: true
+  tasks:
+    - name: Create a dummy file to simulate a reboot requirement (ansible.builtin.file)
+      ansible.builtin.file:
+        path: /var/run/reboot-required-dummy
+        state: touch # Create an empty file
+      when: inventory_hostname == 'node1' # Only perform on node1 for a controlled demo
+      tags: stat_module
+
+    - name: Check for dummy reboot file using stat module (ansible.builtin.stat)
+      ansible.builtin.stat:
+        path: /var/run/reboot-required-dummy
+      register: dummy_reboot_file_status # Store the file's status (e.g., .stat.exists)
+      tags: stat_module
+
+    - name: Show stat module output for dummy file (ansible.builtin.debug)
+      ansible.builtin.debug:
+        msg: "Dummy reboot file exists: {{ dummy_reboot_file_status.stat.exists }}"
+      tags: debug_module
+
+    - name: Reboot node1 if dummy file exists (ansible.builtin.reboot)
+      ansible.builtin.reboot:
+        reboot_timeout: 300 # Wait up to 5 minutes
+      when: dummy_reboot_file_status.stat.exists and inventory_hostname == 'node1'
+      tags: reboot_module
+
+    - name: Wait for node1 to come back online (ansible.builtin.wait_for_connection)
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+      when: dummy_reboot_file_status.stat.exists and inventory_hostname == 'node1'
+      tags: wait_for_connection_module
+
+    - name: Remove dummy reboot file (ansible.builtin.file)
+      ansible.builtin.file:
+        path: /var/run/reboot-required-dummy
+        state: absent # Ensure the file is removed for cleanup
+      when: inventory_hostname == 'node1'
+      tags: file_module
