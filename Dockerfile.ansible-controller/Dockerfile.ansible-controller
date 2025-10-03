@@ -1,5 +1,5 @@
 # Dockerfile.ansible-controller
-FROM ubuntu:latest
+FROM ubuntu:24.10
 
 # Install SSH client ,Ansible and Vim 
 RUN apt-get update && \
